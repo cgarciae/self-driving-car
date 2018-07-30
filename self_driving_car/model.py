@@ -39,6 +39,9 @@ def pilot_net(images, bins, mode):
 
     net = tf.layers.dense(net, bins)
 
-    return net
+    return dict(
+        logits = net,
+        probabilities = tf.nn.softmax(net),
+    )
 
 

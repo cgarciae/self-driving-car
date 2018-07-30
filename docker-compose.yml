@@ -4,3 +4,24 @@ services:
 
   training:
     build: .
+
+    volumes:
+      - ./:/code
+
+    working_dir: /code
+
+
+  notebooks:
+    build: .
+
+    runtime: nvidia
+
+    ports:
+      - "8888:8888"
+
+    volumes:
+      - ./:/code
+
+    working_dir: /code
+
+    command: jupyter notebook --allow-root --ip=0.0.0.0 --NotebookApp.iopub_data_rate_limit=1.0e10 .

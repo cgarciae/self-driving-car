@@ -7,3 +7,4 @@ RUN pip install dicto
 RUN pip install click
 RUN pip install tfinterface
 RUN pip install dataget
+RUN pip install python_path

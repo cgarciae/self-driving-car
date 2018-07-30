@@ -1,5 +1,9 @@
 import dataget as dg
 import tensorflow as tf
+from . import utils
+import pandas as pd
+import numpy as np
+from model import pilot_net
 
 def input_fn(data_dir, params):
 
@@ -11,17 +15,159 @@ def input_fn(data_dir, params):
 
     df = dataset.df
 
+    df = process_dataframe(df, params)
     df = dg.shuffle(df)
 
-
-    ds = tf.data.Dataset.from_tensor_slices(dict(
+    tensors = dict(
         filename = df.filename.as_matrix(),
         steering = df.steering.as_matrix(),
         camera = df.camera.as_matrix(),
+        original_steering = df.original_steering.as_matrix(),
+    )
+
+    if "flipped" in df:
+        tensors["flipped"] = df.flipped.as_matrix().astype(np.int32)
+
+    ds = tf.data.Dataset.from_tensor_slices(tensors)
+
+    ds = ds.apply(tf.contrib.data.shuffle_and_repeat(
+        buffer_size = params.buffer_size,
     ))
 
+    ds = ds.apply(tf.contrib.data.map_and_batch(
+        lambda row: process_data(row, params),
+        batch_size = params.batch_size,
+        num_parallel_calls = params.n_threads,
+        drop_remainder = True,
+    ))
+
+    ds = ds.prefetch(tf.contrib.data.AUTOTUNE)
     
     return ds
+
+
+def model_fn(features, labels, mode, params):
+
+    images = features["image"]
+
+    predictions = pilot_net(images, params.nbins, mode)
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+
+        return tf.estimator.EstimatorSpec(
+            mode = mode,
+            predictions = predictions,
+            export_outputs = {
+                "serving_default" : tf.estimator.export.PredictOutput(predictions)
+            }
+        )
+
+    onehot_labels = get_onehot_labels(features["steering"], params)
+
+    tf.losses.softmax_cross_entropy(
+        onehot_labels = onehot_labels,
+        logits = predictions["logits"],
+    )
+
+    loss = tf.losses.get_total_loss()
+
+    if mode == tf.estimator.ModeKeys.EVAL:
+
+        labels = tf.argmax(onehot_labels, axis = 1)
+        labels_pred = tf.argmax(predictions["logits"], axis = 1)
+
+        accuracy = tf.metrics.accuracy(labels, labels_pred)
+        
+        top_5_accuracy = tf.nn.in_top_k(
+            predictions["logits"], 
+            labels, 
+            5,
+        )
+        top_5_accuracy = tf.cast(top_5_accuracy, tf.float32)
+        top_5_accuracy = tf.metrics.mean(top_5_accuracy)
+
+        return tf.estimator.EstimatorSpec(
+            mode = mode,
+            predictions = predictions,
+            loss = loss,
+            eval_metric_ops = dict(
+                top_5_accuracy = top_5_accuracy,
+                accuracy = accuracy,
+            )
+        )
+
+    
+    
+
+    
+
+def get_onehot_labels(steering, params):
+    
+    label = tf.clip_by_value(steering, -1, 1)
+    label = (label + 1.0) / 2.0
+    label = label * (params.nbins - 1)
+
+    label_upper = tf.ceil(label)
+    label_lower = tf.floor(label)
+
+    prob_upper = label_upper - label
+    prob_lower = 1.0 - prob_upper
+
+    onehot_upper = prob_upper * tf.one_hot(label_upper, params.nbins)
+    onehot_lower = prob_lower * tf.one_hot(label_lower, params.nbins)
+
+    return onehot_upper + onehot_lower
+
+
+
+def process_dataframe(df, params):
+
+    df = df.copy()
+    df_flipped = df.copy()
+
+    df["flipped"] = False
+    df_flipped["flipped"] = True
+
+    df = pd.concat([df, df_flipped])
+
+    df["original_steering"] = df.steering
+
+    cam0 = df.camera == 0
+    # cam1 = df.camera == 1
+    cam2 = df.camera == 2
+
+    df.loc[cam0, "steering"] = df[cam0].steering + params.angle_correction
+    df.loc[cam2, "steering"] = df[cam2].steering - params.angle_correction
+
+    # flip
+    flipped = df.flipped
+    df.loc[flipped, "steering"] = -df[flipped].steering
+
+    return df
+
+def process_data(row, params):
+
+    # read image
+    image = tf.read_file(row["filename"])
+    image = tf.image.decode_and_crop_jpeg(
+        contents = image,
+        crop_window = utils.get_crop_window(params),
+        channels = 3,
+    )
+
+    image = tf.image.resize_images(image, [params.resize_height, params.resize_width])
+
+    # print(row["flipped"])
+
+    image = tf.cond(
+        row["flipped"] > 0,
+        lambda: tf.image.flip_left_right(image),
+        lambda: image,
+    )
+
+    row["image"] = image
+
+    return row
 
 
 def main():

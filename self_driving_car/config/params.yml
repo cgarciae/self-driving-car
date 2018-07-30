@@ -1,0 +1,18 @@
+# correction
+angle_correction: 0.2
+
+# bins
+nbins: 5
+
+# dataset
+batch_size: 64
+buffer_size: 1000
+n_threads: 4
+
+# image
+image_height: 160
+image_width: 320
+crop_up: 50
+crop_down: 25
+resize_height: 66
+resize_width: 200
