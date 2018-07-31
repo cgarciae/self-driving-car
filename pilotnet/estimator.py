@@ -1,9 +1,8 @@
 import dataget as dg
 import tensorflow as tf
-from . import utils
 import pandas as pd
 import numpy as np
-from .model import pilot_net
+from .model import pilot_net, cris_net
 from tensorflow.contrib import autograph
 
 def input_fn(data_dir, params):
@@ -47,11 +46,39 @@ def input_fn(data_dir, params):
     return ds
 
 
+def serving_input_fn(params):
+
+    input_image = tf.placeholder(
+        dtype = tf.float32,
+        shape = [None, None, None, 3],
+        name = "input_image",
+    )
+
+    images = tf.image.resize_images(input_image, [params.image_height, params.image_width])
+
+
+    crop_window = get_crop_window(params)
+    images = tf.image.crop_to_bounding_box(images, *crop_window)
+
+    images = tf.image.resize_images(images, [params.resize_height, params.resize_width])
+
+
+    return tf.estimator.export.ServingInputReceiver(
+        features = dict(
+            image = images,
+        ),
+        receiver_tensors = dict(
+            image = input_image,
+        ),
+    )
+
+
+
 def model_fn(features, labels, mode, params):
 
     images = features["image"]
 
-    predictions = pilot_net(images, params.nbins, mode)
+    predictions = cris_net(images, params.nbins, mode)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
 
@@ -68,6 +95,8 @@ def model_fn(features, labels, mode, params):
     tf.losses.softmax_cross_entropy(
         onehot_labels = onehot_labels,
         logits = predictions["logits"],
+        label_smoothing = params.label_smoothing,
+        weights = get_weights(features["original_steering"], params)
     )
 
     loss = tf.losses.get_total_loss()
@@ -91,10 +120,10 @@ def model_fn(features, labels, mode, params):
             mode = mode,
             predictions = predictions,
             loss = loss,
-            eval_metric_ops = dict(
-                top_5_accuracy = top_5_accuracy,
-                accuracy = accuracy,
-            )
+            eval_metric_ops = {
+                "accuracy/top_5": top_5_accuracy,
+                "accuracy/top_1": accuracy,
+            }
         )
 
    
@@ -119,7 +148,7 @@ def model_fn(features, labels, mode, params):
         top_5_accuracy = tf.reduce_mean(tf.cast(top_5_accuracy, tf.float32))
 
         tf.summary.scalar("accuracy/top_1", accuracy)
-        tf.summary.scalar("accuracy/top_5", accuracy)
+        tf.summary.scalar("accuracy/top_5", top_5_accuracy)
         tf.summary.scalar("learning_rate", learning_rate)
 
         return tf.estimator.EstimatorSpec(
@@ -134,6 +163,30 @@ def model_fn(features, labels, mode, params):
 ###############################
 # helper functions
 ###############################
+
+def get_weights(steering, params):
+
+
+    ones = tf.ones_like(steering)
+    zeros_weight = params.zeros_weight * ones
+
+    return tf.where(
+        tf.equal(steering, 0.0),
+        zeros_weight,
+        ones,
+    )
+
+def get_crop_window(params):
+
+    final_height = params.image_height - (params.crop_up + params.crop_down)
+    final_width = params.image_width
+
+    return [
+        params.crop_up,
+        0,
+        final_height,
+        final_width,
+    ]
 
 @autograph.convert()
 def get_learning_rate(params):
@@ -216,7 +269,7 @@ def process_data(row, params):
     image = tf.read_file(row["filename"])
     image = tf.image.decode_and_crop_jpeg(
         contents = image,
-        crop_window = utils.get_crop_window(params),
+        crop_window = get_crop_window(params),
         channels = 3,
     )
 
@@ -229,6 +282,8 @@ def process_data(row, params):
         lambda: tf.image.flip_left_right(image),
         lambda: image,
     )
+
+    row["steering"] = tf.cast(row["steering"], tf.float32) + tf.random_normal([], mean = params.noise_mean, stddev = params.noise_stddev)
 
     row["image"] = image
 

@@ -2,12 +2,20 @@
 angle_correction: 0.2
 
 # bins
-nbins: 5
+nbins: 21
+
+# regularization
+label_smoothing: 0.2
+zeros_weight: 0.1
+noise_mean: 0.0
+noise_stddev: 0.025
 
 # train
 summary_steps: 200
-max_steps: 30000
+max_steps: 35000
 eval_steps: 20
+start_delay_secs: 60
+throttle_secs: 120
 
 # dataset
 batch_size: 64
@@ -23,7 +31,7 @@ resize_height: 66
 resize_width: 200
 
 # learning rate
-cold_learning_rate: 0.0001
+cold_learning_rate: 0.000001
 learning_rate: 0.01
 final_learning_rate: 0.0001
 

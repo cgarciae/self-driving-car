@@ -27,3 +27,23 @@ services:
     working_dir: /code
 
     command: jupyter notebook --allow-root --ip=0.0.0.0 --NotebookApp.iopub_data_rate_limit=1.0e10 .
+
+
+  run:
+    build: .
+
+    runtime: nvidia
+
+    ports:
+      - "4567:4567"
+
+    volumes:
+      - ./:/code
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+    working_dir: /code
+
+    environment:
+      DISPLAY: $DISPLAY
+
+    command: bash pilotnet/scripts/run.sh
