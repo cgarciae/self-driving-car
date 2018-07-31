@@ -63,11 +63,13 @@ class Car:
             plt.ion()
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111)
-            label = [ "{:.3f}*".format(a) for a in self.angles ]
+            label = [ "{:.3f}".format(a) for a in self.angles ]
+            # label = list(range(18))
             index = range(len(label))
             self.ax.set_xticks(index)
             self.ax.set_xticklabels(label)
             self.bar = self.ax.bar(index, np.ones_like(self.angles))
+            # self.bar = self.ax.bar(index, np.ones_like(label))
             
 
             # self.fig.canvas.draw()
@@ -96,6 +98,7 @@ class Car:
             )
 
             probabilities = predictions["probabilities"][0]
+            
 
             if self.params.policy == "mean":
                 steering_angle = np.dot(probabilities.T, self.angles)
@@ -118,6 +121,8 @@ class Car:
 
 
             if self.plot:
+                # probabilities = predictions["embedding"][0]
+
                 for i, p in enumerate(probabilities):
                     self.bar[i].set_height(p)
                 

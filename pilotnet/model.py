@@ -88,7 +88,7 @@ def cris_net(images, bins, mode):
     net = tf.nn.relu(net)
 
 
-    net = tf.layers.flatten(net)
+    net = embedding = tf.layers.flatten(net)
 
     # net = tf.layers.dense(net, 200)
     # net = tf.layers.batch_normalization(net, training=training)
@@ -103,4 +103,5 @@ def cris_net(images, bins, mode):
     return dict(
         logits = net,
         probabilities = tf.nn.softmax(net),
+        embedding = embedding,
     )
