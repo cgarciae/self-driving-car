@@ -134,8 +134,32 @@ def model_fn(features, labels, mode, params):
 # helper functions
 ###############################
 
+@tf.contrib.autograph.convert()
+def _get_learning_rate(params):
+    
+    global_step = tf.train.get_global_step()
+
+    initial_learning_rate = params.learning_rate * params.train_batch_size / 128.0
+
+    if global_step < params.cold_steps:
+        learning_rate = params.cold_learning_rate
+    
+    elif global_step < params.cold_steps + params.warmup_steps:
+        step = global_step - params.cold_steps
+        p = step / params.warmup_steps
+        
+        learning_rate = initial_learning_rate * p + (1.0 - p) * params.cold_learning_rate
+
+    else:
+        step = global_step - (params.cold_steps + params.warmup_steps)
+        learning_rate = tf.train.linear_cosine_decay(initial_learning_rate, step, params.decay_steps, beta = params.final_learning_rate)
+
+    return learning_rate
+
 def get_learning_rate(params):
-    pass
+    return tf.cast(_get_learning_rate(params), tf.float32)
+
+
     
 
 def get_onehot_labels(steering, params):

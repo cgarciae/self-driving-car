@@ -16,3 +16,15 @@ crop_up: 50
 crop_down: 25
 resize_height: 66
 resize_width: 200
+
+# learning rate
+cold_learning_rate: 0.0001
+learning_rate: 0.01
+final_learning_rate: 0.0001
+
+cold_steps: 5000
+warmup_steps: 5000
+decay_steps: 10000
+
+train_batch_size: 128
+
