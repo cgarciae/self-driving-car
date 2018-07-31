@@ -71,10 +71,10 @@ def model_fn(features, labels, mode, params):
 
     loss = tf.losses.get_total_loss()
 
-    if mode == tf.estimator.ModeKeys.EVAL:
+    labels = tf.argmax(onehot_labels, axis = 1)
+    labels_pred = tf.argmax(predictions["logits"], axis = 1)
 
-        labels = tf.argmax(onehot_labels, axis = 1)
-        labels_pred = tf.argmax(predictions["logits"], axis = 1)
+    if mode == tf.estimator.ModeKeys.EVAL:
 
         accuracy = tf.metrics.accuracy(labels, labels_pred)
         
@@ -96,9 +96,46 @@ def model_fn(features, labels, mode, params):
             )
         )
 
-    
-    
+   
 
+    if mode == tf.estimator.ModeKeys.TRAIN:
+
+        with tf.name_scope("training"), tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+            
+            learning_rate = get_learning_rate(params)
+
+            update = tf.train.AdamOptimizer(
+                learning_rate
+            ).minimize(
+                loss,
+                global_step = tf.train.get_global_step()
+            ) 
+
+         # summaries
+        accuracy = tf.contrib.metrics.accuracy(labels, labels_pred)
+
+        top_5_accuracy = tf.nn.in_top_k(predictions["logits"], labels, 5)
+        top_5_accuracy = tf.reduce_mean(tf.cast(top_5_accuracy, tf.float32))
+
+        tf.summary.scalar("accuracy/top_1", accuracy)
+        tf.summary.scalar("accuracy/top_5", accuracy)
+        tf.summary.scalar("learning_rate", learning_rate)
+
+        return tf.estimator.EstimatorSpec(
+            mode = mode,
+            predictions = predictions,
+            loss = loss,
+            train_op = update,
+        )
+
+
+    
+###############################
+# helper functions
+###############################
+
+def get_learning_rate(params):
+    pass
     
 
 def get_onehot_labels(steering, params):
