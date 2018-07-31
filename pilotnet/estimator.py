@@ -3,7 +3,8 @@ import tensorflow as tf
 from . import utils
 import pandas as pd
 import numpy as np
-from model import pilot_net
+from .model import pilot_net
+from tensorflow.contrib import autograph
 
 def input_fn(data_dir, params):
 
@@ -134,8 +135,8 @@ def model_fn(features, labels, mode, params):
 # helper functions
 ###############################
 
-@tf.contrib.autograph.convert()
-def _get_learning_rate(params):
+@autograph.convert()
+def get_learning_rate(params):
     
     global_step = tf.train.get_global_step()
 
@@ -143,21 +144,21 @@ def _get_learning_rate(params):
 
     if global_step < params.cold_steps:
         learning_rate = params.cold_learning_rate
+        learning_rate = tf.cast(learning_rate, tf.float32)
     
     elif global_step < params.cold_steps + params.warmup_steps:
         step = global_step - params.cold_steps
         p = step / params.warmup_steps
         
         learning_rate = initial_learning_rate * p + (1.0 - p) * params.cold_learning_rate
+        learning_rate = tf.cast(learning_rate, tf.float32)
 
     else:
         step = global_step - (params.cold_steps + params.warmup_steps)
         learning_rate = tf.train.linear_cosine_decay(initial_learning_rate, step, params.decay_steps, beta = params.final_learning_rate)
+        learning_rate = tf.cast(learning_rate, tf.float32)
 
     return learning_rate
-
-def get_learning_rate(params):
-    return tf.cast(_get_learning_rate(params), tf.float32)
 
 
     
@@ -172,10 +173,13 @@ def get_onehot_labels(steering, params):
     label_lower = tf.floor(label)
 
     prob_upper = label_upper - label
+    prob_upper = tf.cast(prob_upper, tf.float32)
+    prob_upper = tf.expand_dims(prob_upper, 1)
+
     prob_lower = 1.0 - prob_upper
 
-    onehot_upper = prob_upper * tf.one_hot(label_upper, params.nbins)
-    onehot_lower = prob_lower * tf.one_hot(label_lower, params.nbins)
+    onehot_upper = prob_upper * tf.one_hot(tf.cast(label_upper, tf.int32), params.nbins)
+    onehot_lower = prob_lower * tf.one_hot(tf.cast(label_lower, tf.int32), params.nbins)
 
     return onehot_upper + onehot_lower
 

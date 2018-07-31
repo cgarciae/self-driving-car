@@ -4,6 +4,11 @@ angle_correction: 0.2
 # bins
 nbins: 5
 
+# train
+summary_steps: 200
+max_steps: 30000
+eval_steps: 20
+
 # dataset
 batch_size: 64
 buffer_size: 1000
@@ -24,7 +29,7 @@ final_learning_rate: 0.0001
 
 cold_steps: 5000
 warmup_steps: 5000
-decay_steps: 10000
+decay_steps: 20000
 
 train_batch_size: 128
 

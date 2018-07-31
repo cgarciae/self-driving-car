@@ -2,8 +2,10 @@ version: '2.3'
 
 services:
 
-  training:
+  train:
     build: .
+
+    runtime: nvidia
 
     volumes:
       - ./:/code
