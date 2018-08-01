@@ -9,6 +9,7 @@ label_smoothing: 0.2
 zeros_weight: 0.1
 noise_mean: 0.0
 noise_stddev: 0.025
+l1_embeddings_regularization: 0.001
 
 # train
 summary_steps: 200

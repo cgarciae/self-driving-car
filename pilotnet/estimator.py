@@ -78,7 +78,7 @@ def model_fn(features, labels, mode, params):
 
     images = features["image"]
 
-    predictions = cris_net(images, params.nbins, mode)
+    predictions = cris_net(images, mode, params)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
 

@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def pilot_net(images, bins, mode):
+def pilot_net(images, mode, params):
 
     training = mode == tf.estimator.ModeKeys.TRAIN
 
@@ -37,7 +37,7 @@ def pilot_net(images, bins, mode):
     net = tf.layers.batch_normalization(net, training=training)
     net = tf.nn.relu(net)
 
-    net = tf.layers.dense(net, bins)
+    net = tf.layers.dense(net, params.nbins)
 
     return dict(
         logits = net,
@@ -45,7 +45,7 @@ def pilot_net(images, bins, mode):
     )
 
 
-def cris_net(images, bins, mode):
+def cris_net(images, mode, params):
 
     training = mode == tf.estimator.ModeKeys.TRAIN
 
@@ -98,7 +98,12 @@ def cris_net(images, bins, mode):
     net = tf.layers.batch_normalization(net, training=training)
     net = tf.nn.relu(net)
 
-    net = tf.layers.dense(net, bins)
+    net = tf.layers.dense(net, params.nbins)
+
+    # losses
+    if params.l1_embeddings_regularization > 0:
+        embedding_loss = tf.contrib.layers.l1_regularizer(scale = params.l1_embeddings_regularization)(embedding)
+        tf.losses.add_loss(embedding_loss)
 
     return dict(
         logits = net,
