@@ -21,29 +21,30 @@ services:
     ports:
       - "8888:8888"
 
+
     volumes:
       - ./:/code
 
     working_dir: /code
 
-    command: jupyter notebook --allow-root --ip=0.0.0.0 --NotebookApp.iopub_data_rate_limit=1.0e10 .
+    command: jupyter notebook --no-browser --ip 0.0.0.0 --allow-root --NotebookApp.iopub_data_rate_limit=1.0e10 
 
 
-  run:
-    build: .
+  # run:
+  #   build: .
 
-    runtime: nvidia
+  #   runtime: nvidia
 
-    ports:
-      - "4567:4567"
+  #   ports:
+  #     - "4567:4567"
 
-    volumes:
-      - ./:/code
-      - /tmp/.X11-unix:/tmp/.X11-unix
+  #   volumes:
+  #     - ./:/code
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
 
-    working_dir: /code
+  #   working_dir: /code
 
-    environment:
-      DISPLAY: $DISPLAY
+  #   environment:
+  #     DISPLAY: $DISPLAY
 
-    command: bash pilotnet/scripts/run.sh
+  #   command: bash pilotnet/scripts/run.sh

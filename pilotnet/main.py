@@ -34,6 +34,7 @@ def main(data_dir, job_dir, mode, params):
     run_config = tf.estimator.RunConfig(
         model_dir = job_dir,
         save_summary_steps = params.summary_steps,
+        save_checkpoints_steps = params.save_checkpoints_steps,
     )
 
     estimator = tf.estimator.Estimator(

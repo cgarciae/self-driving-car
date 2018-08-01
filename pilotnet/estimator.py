@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from .model import pilot_net, cris_net
 from tensorflow.contrib import autograph
+import tensorflow.contrib.slim as slim
 
 def input_fn(data_dir, params):
 
@@ -16,6 +17,10 @@ def input_fn(data_dir, params):
     df = dataset.df
 
     df = process_dataframe(df, params)
+
+    if params.only_center_camera:
+        df = df[df.camera == 1]
+
     df = dg.shuffle(df)
 
     tensors = dict(
@@ -78,7 +83,23 @@ def model_fn(features, labels, mode, params):
 
     images = features["image"]
 
-    predictions = cris_net(images, mode, params)
+    if params.network == "pilot":
+        network = pilot_net
+    elif params.network == "cris":
+        network = cris_net
+    else:
+        raise ValueError(params.network)
+
+    predictions = network(
+        images,
+        mode,
+        params, 
+        conv_args = dict(
+            kernel_regularizer = tf.contrib.layers.l2_regularizer(
+                params.l2_regularization
+            ),
+        ),
+    )
 
     if mode == tf.estimator.ModeKeys.PREDICT:
 
@@ -170,10 +191,13 @@ def get_weights(steering, params):
     ones = tf.ones_like(steering)
     zeros_weight = params.zeros_weight * ones
 
+    weights = tf.abs(tf.clip_by_value(steering, -1.0, 1.0))
+    weights = 1.0 + (params.max_weight - 1.0 ) * weights
+
     return tf.where(
         tf.equal(steering, 0.0),
         zeros_weight,
-        ones,
+        weights,
     )
 
 def get_crop_window(params):
@@ -193,7 +217,7 @@ def get_learning_rate(params):
     
     global_step = tf.train.get_global_step()
 
-    initial_learning_rate = params.learning_rate * params.train_batch_size / 128.0
+    initial_learning_rate = params.learning_rate * params.batch_size / 128.0
 
     if global_step < params.cold_steps:
         learning_rate = params.cold_learning_rate
@@ -250,9 +274,18 @@ def process_dataframe(df, params):
 
     df["original_steering"] = df.steering
 
+    
+
     cam0 = df.camera == 0
     # cam1 = df.camera == 1
     cam2 = df.camera == 2
+
+    if params.same_direction_camera:
+        wrong_cam0 = cam0 & (df.original_steering + params.same_direction_camera < 0)
+        wrong_cam2 = cam2 & (df.original_steering - params.same_direction_camera > 0)
+
+        df = df[~wrong_cam0]
+        df = df[~wrong_cam2]
 
     df.loc[cam0, "steering"] = df[cam0].steering + params.angle_correction
     df.loc[cam2, "steering"] = df[cam2].steering - params.angle_correction
@@ -283,7 +316,8 @@ def process_data(row, params):
         lambda: image,
     )
 
-    row["steering"] = tf.cast(row["steering"], tf.float32) + tf.random_normal([], mean = params.noise_mean, stddev = params.noise_stddev)
+    noise = tf.random_normal([], mean = 0.0, stddev = params.angle_noise_std)
+    row["steering"] = tf.cast(row["steering"], tf.float32) + noise
 
     row["image"] = image
 

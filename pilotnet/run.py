@@ -15,6 +15,7 @@ from io import BytesIO
 import tfinterface as ti
 import dicto as do
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 TRAINING_PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "params.yml")
@@ -52,31 +53,10 @@ class Car:
         self.controller = controller
         self.image_folder = image_folder
         self.nbins = train.nbins
-        self.plot = params.plot
         self.params = params
 
-        self.angles = np.linspace(-1.0, 1.0, self.nbins)
-
-        print("Angles:", self.angles)
-
-        if params.plot:
-            plt.ion()
-            self.fig = plt.figure()
-            self.ax = self.fig.add_subplot(111)
-            label = [ "{:.3f}".format(a) for a in self.angles ]
-            # label = list(range(18))
-            index = range(len(label))
-            self.ax.set_xticks(index)
-            self.ax.set_xticklabels(label)
-            self.bar = self.ax.bar(index, np.ones_like(self.angles))
-            # self.bar = self.ax.bar(index, np.ones_like(label))
-            
-
-            # self.fig.canvas.draw()
-            # self.fig.canvas.flush_events()
-            plt.pause(0.00001)
-
-
+        self.angles = None
+        self.first_plot = True
 
 
     
@@ -98,6 +78,15 @@ class Car:
             )
 
             probabilities = predictions["probabilities"][0]
+
+            if "embedding" in predictions:
+                embedding = predictions["embedding"][0]
+            else:
+                embedding = None
+
+            if self.angles is None:
+                self.angles = np.linspace(-1.0, 1.0, len(probabilities))
+                print("Angles:", self.angles)
             
 
             if self.params.policy == "mean":
@@ -119,19 +108,52 @@ class Car:
                 image_filename = os.path.join(self.image_folder, timestamp)
                 image.save('{}.jpg'.format(image_filename))
 
-
-            if self.plot:
-                # probabilities = predictions["embedding"][0]
-
-                for i, p in enumerate(probabilities):
-                    self.bar[i].set_height(p)
-                
-                self.fig.canvas.draw()
-                self.fig.canvas.flush_events()
+            if self.params.plot:
+                self.plot(probabilities, embedding)
 
         else:
             # NOTE: DON'T EDIT THIS.
             self.sio.emit('manual', data={}, skip_sid=True)
+
+    def plot(self, probabilities, embedding):
+
+        if self.first_plot:
+            self.first_plot = False
+
+            plt.ion()
+            self.fig = plt.figure()
+
+            label = [ "{:.3f}".format(a) for a in self.angles ]
+            index = range(len(label))
+            self.ax1 = plt.subplot2grid((5, 1), (0, 0), rowspan=4)
+            self.ax1.set_xticks(index)
+            self.ax1.set_xticklabels(label)
+            self.bar = self.ax1.bar(index, np.ones_like(probabilities))
+
+            if embedding is not None:
+                label = range(len(embedding))
+                index = label
+                self.ax2 = plt.subplot2grid((5, 1), (4, 0))
+                self.ax2.set_xticks(index)
+                self.ax2.set_xticklabels(label)
+                self.bar2 = self.ax2.bar(index, np.ones_like(embedding))
+            
+
+            plt.pause(0.00001)
+
+        else:
+
+            for i, p in enumerate(probabilities):
+                self.bar[i].set_height(p)
+
+            if embedding is not None:
+                for i, p in enumerate(embedding):
+                    self.bar2[i].set_height(p)
+            
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+
 
 
     def connect(self, sid, environ):
