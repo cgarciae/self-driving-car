@@ -67,6 +67,7 @@ def serving_input_fn(params):
 
     images = tf.image.resize_images(images, [params.resize_height, params.resize_width])
 
+    images = (images / 255.0) * 2.0 - 1.0
 
     return tf.estimator.export.ServingInputReceiver(
         features = dict(
@@ -113,6 +114,8 @@ def model_fn(features, labels, mode, params):
 
     onehot_labels = get_onehot_labels(features["steering"], params)
 
+    
+
     tf.losses.softmax_cross_entropy(
         onehot_labels = onehot_labels,
         logits = predictions["logits"],
@@ -155,7 +158,7 @@ def model_fn(features, labels, mode, params):
             
             learning_rate = get_learning_rate(params)
 
-            update = tf.train.AdamOptimizer(
+            update = tf.contrib.opt.PowerSignOptimizer(
                 learning_rate
             ).minimize(
                 loss,
@@ -249,7 +252,7 @@ def get_onehot_labels(steering, params):
     label_upper = tf.ceil(label)
     label_lower = tf.floor(label)
 
-    prob_upper = label_upper - label
+    prob_upper = 1.0 - (label_upper - label)
     prob_upper = tf.cast(prob_upper, tf.float32)
     prob_upper = tf.expand_dims(prob_upper, 1)
 
@@ -258,7 +261,21 @@ def get_onehot_labels(steering, params):
     onehot_upper = prob_upper * tf.one_hot(tf.cast(label_upper, tf.int32), params.nbins)
     onehot_lower = prob_lower * tf.one_hot(tf.cast(label_lower, tf.int32), params.nbins)
 
-    return onehot_upper + onehot_lower
+    onehot_labels = onehot_upper + onehot_lower
+
+    onehot_labels = tf.Print(onehot_labels, 
+        [
+            onehot_labels[0],
+            steering[0],
+            label_upper[0],
+            label_lower[0],
+            prob_upper[0],
+            prob_lower[0],
+        ],
+        first_n = 5,
+    )
+
+    return onehot_labels
 
 
 
@@ -276,16 +293,16 @@ def process_dataframe(df, params):
 
     
 
-    cam0 = df.camera == 0
-    # cam1 = df.camera == 1
-    cam2 = df.camera == 2
+    
 
     if params.same_direction_camera:
-        wrong_cam0 = cam0 & (df.original_steering + params.same_direction_camera < 0)
-        wrong_cam2 = cam2 & (df.original_steering - params.same_direction_camera > 0)
+        wrong_cam0 = (df.camera == 0) & (df.original_steering + params.same_direction_camera < 0)
+        wrong_cam2 = (df.camera == 2) & (df.original_steering - params.same_direction_camera > 0)
 
-        df = df[~wrong_cam0]
-        df = df[~wrong_cam2]
+        df = df[(~wrong_cam0) & (~wrong_cam2)]
+
+    cam0 = df.camera == 0
+    cam2 = df.camera == 2
 
     df.loc[cam0, "steering"] = df[cam0].steering + params.angle_correction
     df.loc[cam2, "steering"] = df[cam2].steering - params.angle_correction
@@ -318,6 +335,8 @@ def process_data(row, params):
 
     noise = tf.random_normal([], mean = 0.0, stddev = params.angle_noise_std)
     row["steering"] = tf.cast(row["steering"], tf.float32) + noise
+
+    image = (image / 255.0) * 2.0 - 1.0
 
     row["image"] = image
 
