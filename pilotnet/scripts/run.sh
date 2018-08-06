@@ -1,40 +1,6 @@
-# declare -r EXPORT_DIR="models/pilotnet_20180731154413/export/pilotnet/1533052335"
-# declare -r EXPORT_DIR="models/pilotnet_20180731163432/export/pilotnet/1533055511"
-# declare -r EXPORT_DIR="models/pilotnet_20180731173830/export/pilotnet/1533059279"
-# declare -r EXPORT_DIR="models/pilotnet_20180731185048/export/pilotnet/1533063609"
-# declare -r EXPORT_DIR="models/pilotnet_20180731190340/export/pilotnet/1533071440"
-# declare -r EXPORT_DIR="models/pilotnet_20180731172254/export/pilotnet/1533058343"
-# declare -r EXPORT_DIR="models/pilotnet_20180731220338/export/pilotnet/1533075183"
-# declare -r EXPORT_DIR="models/pilotnet_20180801154903/export/pilotnet/1533139137"
-# declare -r EXPORT_DIR="models/pilotnet_20180801165505/export/pilotnet/1533143184"
-# declare -r EXPORT_DIR="models/pilotnet_20180801175855/export/pilotnet/1533147170"
-# declare -r EXPORT_DIR="models/pilotnet_20180801181811/export/pilotnet/1533148324"
-# declare -r EXPORT_DIR="models/pilotnet_20180801184056/export/pilotnet/1533149668"
-# declare -r EXPORT_DIR="models/pilotnet_20180801185951/export/pilotnet/1533150838"
-# declare -r EXPORT_DIR="models/pilotnet_20180801193008/export/pilotnet/1533152663"
-# declare -r EXPORT_DIR="models/pilotnet_20180801195323/export/pilotnet/1533154012"
-# declare -r EXPORT_DIR="models/pilotnet_20180801201411/export/pilotnet/1533155461"
-# declare -r EXPORT_DIR="models/pilotnet_20180801203725/export/pilotnet/1533156865"
-# declare -r EXPORT_DIR="models/pilotnet_20180801210149/export/pilotnet/1533158310"
-# declare -r EXPORT_DIR="models/pilotnet_20180801213847/export/pilotnet/1533160518"
-# declare -r EXPORT_DIR="models/pilotnet_20180801215904/export/pilotnet/1533161735"
-# declare -r EXPORT_DIR="models/pilotnet_20180801222020/export/pilotnet/1533163177"
-# declare -r EXPORT_DIR="models/pilotnet_20180801224620/export/pilotnet/1533164757"
-# declare -r EXPORT_DIR="models/pilotnet_20180801231538/export/pilotnet/1533166506"
-# declare -r EXPORT_DIR="models/pilotnet_20180801233811/export/pilotnet/1533167083"
-# declare -r EXPORT_DIR="models/pilotnet_20180801234950/export/pilotnet/1533167851"
-# declare -r EXPORT_DIR="models/pilotnet_20180802004316/export/pilotnet/1533171800"
-# declare -r EXPORT_DIR="models/pilotnet_20180802011851/export/pilotnet/1533173036"
-# declare -r EXPORT_DIR="models/pilotnet_20180802013916/export/pilotnet/1533174413"
-# declare -r EXPORT_DIR="models/pilotnet_20180802015402/export/pilotnet/1533175145"
-# declare -r EXPORT_DIR="models/pilotnet_20180802021126/export/pilotnet/1533176246"
-declare -r EXPORT_DIR="models/pilotnet_20180802023014/export/pilotnet/1533177407" #=> Good
-# declare -r EXPORT_DIR="models/pilotnet_20180802024248/export/pilotnet/1533178109"
-# declare -r EXPORT_DIR="models/pilotnet_20180802030011/export/pilotnet/1533179153"
-# declare -r EXPORT_DIR="models/pilotnet_20180802031628/export/pilotnet/1533180128"
-# declare -r EXPORT_DIR="models/pilotnet_20180802032841/export/pilotnet/1533182655"
-# declare -r EXPORT_DIR="models/pilotnet_20180802041904/export/pilotnet/1533183911"
-# declare -r EXPORT_DIR="models/pilotnet_20180802041904/export/pilotnet/1533186986"
+# declare -r EXPORT_DIR="models/pilotnet_20180802023014/export/pilotnet/1533177407" #=> Good
+declare -r EXPORT_DIR="models/pilotnet_20180806135731/export/pilotnet/1533567083" #=> Good
+
 
 python -m pilotnet.run \
     --export-dir $EXPORT_DIR \

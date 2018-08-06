@@ -57,33 +57,38 @@ def main(raw_dir, augmented_dir, limit, rm, params):
         
 
 
-def get_seq():
+def get_seq(params):
+
+    filters = iaa.SomeOf(params.filters_repeat, [
+        iaa.ChangeColorspace("BGR"),
+        iaa.ChangeColorspace("GRAY"),
+        iaa.GaussianBlur(sigma=(0.0, 3.0)),
+        iaa.AverageBlur(k=(2, 9)),
+        iaa.MedianBlur(k=(3, 9)),
+        iaa.Add((-40, 40), per_channel=0.5),
+        iaa.Add((-40, 40)),
+        iaa.AdditiveGaussianNoise(scale=0.05*255, per_channel=0.5),
+        iaa.AdditiveGaussianNoise(scale=0.05*255),
+        iaa.Multiply((0.5, 1.5), per_channel=0.5),
+        iaa.Multiply((0.5, 1.5)),
+        iaa.MultiplyElementwise((0.5, 1.5)),
+        iaa.ContrastNormalization((0.5, 1.5)),
+        iaa.ContrastNormalization((0.5, 1.5), per_channel=0.5),
+        iaa.ElasticTransformation(alpha=(0, 2.5), sigma=0.25),
+        iaa.Sharpen(alpha=(0.6, 1.0)),
+        iaa.Emboss(alpha=(0.0, 0.5)),
+        iaa.CoarseDropout(0.2, size_percent=0.00001, per_channel = 1.0),
+    ])
+    affine = iaa.Affine(
+        rotate=(-7, 7),
+        scale=(0.9, 1.1),
+        translate_percent=dict(x = (-0.05, 0.05)),
+        mode = "symmetric",
+    )
+
     return iaa.Sequential([
-        iaa.OneOf([
-            iaa.ChangeColorspace("BGR"),
-            iaa.ChangeColorspace("GRAY"),
-            iaa.GaussianBlur(sigma=(0.0, 3.0)),
-            iaa.AverageBlur(k=(2, 9)),
-            iaa.MedianBlur(k=(3, 9)),
-            iaa.Add((-40, 40), per_channel=0.5),
-            iaa.Add((-40, 40)),
-            iaa.AdditiveGaussianNoise(scale=0.05*255, per_channel=0.5),
-            iaa.AdditiveGaussianNoise(scale=0.05*255),
-            iaa.Multiply((0.5, 1.5), per_channel=0.5),
-            iaa.Multiply((0.5, 1.5)),
-            iaa.MultiplyElementwise((0.5, 1.5)),
-            iaa.ContrastNormalization((0.5, 1.5)),
-            iaa.ContrastNormalization((0.5, 1.5), per_channel=0.5),
-            iaa.ElasticTransformation(alpha=(0, 2.5), sigma=0.25),
-            iaa.Sharpen(alpha=(0.6, 1.0)),
-            iaa.Emboss(alpha=(0.0, 0.5)),
-        ]),
-        iaa.Affine(
-            rotate=(-7, 7),
-            scale=(0.9, 1.1),
-            translate_percent=dict(x = (-0.05, 0.05)),
-            mode = "symmetric",
-        ),
+        filters,
+        affine,
     ])
 
 def load_image(row, seq, save_dir = None, return_image = True):
@@ -120,7 +125,7 @@ def load_image(row, seq, save_dir = None, return_image = True):
 
 def augment_dataset(df, params, save_dir = None, return_image = True):
 
-    seq = get_seq()
+    seq = get_seq(params)
 
     df = df.copy()
 
