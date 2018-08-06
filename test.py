@@ -8,4 +8,4 @@ ds = ds.get(download = False)
 df = ds.df
 
 print(df.head())
-print(df.filename.iloc[0])
+print(df.filepath.iloc[0])

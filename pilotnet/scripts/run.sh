@@ -28,13 +28,13 @@
 # declare -r EXPORT_DIR="models/pilotnet_20180802013916/export/pilotnet/1533174413"
 # declare -r EXPORT_DIR="models/pilotnet_20180802015402/export/pilotnet/1533175145"
 # declare -r EXPORT_DIR="models/pilotnet_20180802021126/export/pilotnet/1533176246"
-# declare -r EXPORT_DIR="models/pilotnet_20180802023014/export/pilotnet/1533177407" #=> Good
+declare -r EXPORT_DIR="models/pilotnet_20180802023014/export/pilotnet/1533177407" #=> Good
 # declare -r EXPORT_DIR="models/pilotnet_20180802024248/export/pilotnet/1533178109"
 # declare -r EXPORT_DIR="models/pilotnet_20180802030011/export/pilotnet/1533179153"
 # declare -r EXPORT_DIR="models/pilotnet_20180802031628/export/pilotnet/1533180128"
 # declare -r EXPORT_DIR="models/pilotnet_20180802032841/export/pilotnet/1533182655"
 # declare -r EXPORT_DIR="models/pilotnet_20180802041904/export/pilotnet/1533183911"
-declare -r EXPORT_DIR="models/pilotnet_20180802041904/export/pilotnet/1533186986"
+# declare -r EXPORT_DIR="models/pilotnet_20180802041904/export/pilotnet/1533186986"
 
 python -m pilotnet.run \
     --export-dir $EXPORT_DIR \

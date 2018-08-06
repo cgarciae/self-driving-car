@@ -6,11 +6,12 @@ from .model import pilot_net, cris_net
 from tensorflow.contrib import autograph
 import tensorflow.contrib.slim as slim
 
-def input_fn(data_dir, params):
+def input_fn(data_dir, normalize, params):
 
     dataset = dg.data(
         "udacity-selfdriving-simulator",
         path = data_dir,
+        normalize = normalize,
     )
     dataset = dataset.get()
 
@@ -24,7 +25,7 @@ def input_fn(data_dir, params):
     df = dg.shuffle(df)
 
     tensors = dict(
-        filename = df.filename.as_matrix(),
+        filepath = df.filepath.as_matrix(),
         steering = df.steering.as_matrix(),
         camera = df.camera.as_matrix(),
         original_steering = df.original_steering.as_matrix(),
@@ -133,8 +134,8 @@ def model_fn(features, labels, mode, params):
         accuracy = tf.metrics.accuracy(labels, labels_pred)
         
         top_5_accuracy = tf.nn.in_top_k(
-            predictions["logits"], 
-            labels, 
+            predictions["logits"],
+            labels,
             5,
         )
         top_5_accuracy = tf.cast(top_5_accuracy, tf.float32)
@@ -316,7 +317,7 @@ def process_dataframe(df, params):
 def process_data(row, params):
 
     # read image
-    image = tf.read_file(row["filename"])
+    image = tf.read_file(row["filepath"])
     image = tf.image.decode_and_crop_jpeg(
         contents = image,
         crop_window = get_crop_window(params),

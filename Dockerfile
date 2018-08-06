@@ -14,6 +14,9 @@ RUN pip install python_path
 RUN pip install python-socketio
 RUN pip install eventlet
 RUN pip install flask
+RUN pip install ipywidgets
+RUN pip install imgaug
+RUN pip install dask
 
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8

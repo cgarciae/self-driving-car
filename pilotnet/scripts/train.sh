@@ -9,7 +9,7 @@ declare -r MODE="train"
 
 echo MODEL_DIR: $MODEL_DIR
 
-python -m pilotnet.main \
+python -m pilotnet.train \
     --job-dir $MODEL_DIR \
     --data-dir $DATA_DIR \
     --mode $MODE
