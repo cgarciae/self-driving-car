@@ -6,12 +6,11 @@ from .model import pilot_net, cris_net
 from tensorflow.contrib import autograph
 import tensorflow.contrib.slim as slim
 
-def input_fn(data_dir, normalize, params):
+def input_fn(data_dir, params):
 
     dataset = dg.data(
         "udacity-selfdriving-simulator",
         path = data_dir,
-        normalize = normalize,
     )
     dataset = dataset.get()
 

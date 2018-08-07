@@ -28,6 +28,7 @@ def main(raw_dir, augmented_dir, limit, rm, params):
     df = dg.data(
         "udacity-selfdriving-simulator",
         path = raw_dir,
+        normalize = False,
     ).df
 
     if limit:
@@ -48,10 +49,16 @@ def main(raw_dir, augmented_dir, limit, rm, params):
         folder = sample.folder + "_" + str(sample.augment_idx)
         csv_path = os.path.join(augmented_dir, folder, "driving_log.csv")
 
-        del dfg["image"]
+        del dfg["left_image"]
+        del dfg["left_filepath"]
+        del dfg["center_image"]
+        del dfg["center_filepath"]
+        del dfg["right_image"]
+        del dfg["right_filepath"]
+
         del dfg["augment_idx"]
-        del dfg["filepath"]
         del dfg["folder"]
+        del dfg["augmented"]
 
         dfg.to_csv(csv_path, index = False)
         
@@ -91,14 +98,14 @@ def get_seq(params):
         affine,
     ])
 
-def load_image(row, seq, save_dir = None, return_image = True):
+def load_image(row, path_column, name_column, seq, save_dir = None, return_image = True):
 
     
-    image = dg.functions._load_image(row.filepath)
+    image = dg.functions._load_image(row[path_column])
 
     
 
-    if row["augment"]:
+    if row["augmented"]:
         try:
             image = seq.augment_image(image)
         except:
@@ -109,7 +116,7 @@ def load_image(row, seq, save_dir = None, return_image = True):
     if save_dir is not None:
         folder = row.folder + "_" + str(row.augment_idx)
         image_folder = os.path.join(save_dir, folder, "IMG")
-        image_path = os.path.join(image_folder, row.filename.strip())
+        image_path = os.path.join(image_folder, row[name_column].strip())
         
         os.makedirs(image_folder, exist_ok=True)
 
@@ -129,14 +136,14 @@ def augment_dataset(df, params, save_dir = None, return_image = True):
 
     df = df.copy()
 
-    df["augment"] = False
+    df["augmented"] = False
     df["augment_idx"] = 0
 
 
     dfs = [df]
     for i in range(params.augmentation_factor - 1):
         dfi = df.copy()
-        dfi["augment"] = True
+        dfi["augmented"] = True
         dfi["augment_idx"] = i + 1
         dfs.append(dfi)
 
@@ -144,7 +151,12 @@ def augment_dataset(df, params, save_dir = None, return_image = True):
 
     sd = dd.from_pandas(df, npartitions = params.n_threads)
 
-    sd["image"] = sd.apply(lambda row: load_image(row, seq, save_dir=save_dir, return_image=return_image), axis = 1, meta=tuple)
+    if "filepath" in sd.columns:
+        sd["image"] = sd.apply(lambda row: load_image(row, "filepath", "filename", seq, save_dir=save_dir, return_image=return_image), axis = 1, meta=tuple)
+    else:
+        sd["left_image"] = sd.apply(lambda row: load_image(row, "left_filepath", "left", seq, save_dir=save_dir, return_image=return_image), axis = 1, meta=tuple)
+        sd["center_image"] = sd.apply(lambda row: load_image(row, "center_filepath", "center", seq, save_dir=save_dir, return_image=return_image), axis = 1, meta=tuple)
+        sd["right_image"] = sd.apply(lambda row: load_image(row, "right_filepath", "right", seq, save_dir=save_dir, return_image=return_image), axis = 1, meta=tuple)
 
     return sd
 

@@ -27,9 +27,8 @@ class Mode:
 @click.option('--data-dir', required = True)
 @click.option('--job-dir', required = True)
 @click.option('--mode', default = "train_and_evaluate", type=click.Choice([Mode.train_and_evaluate, Mode.train, Mode.evaluate, Mode.export]))
-@click.option('--normalize', type = int, default = False)
 @do.click_options_config(PARAMS_PATH, "params", underscore_to_dash = False)
-def main(data_dir, job_dir, mode, normalize, params):
+def main(data_dir, job_dir, mode, params):
     
     tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -58,12 +57,12 @@ def main(data_dir, job_dir, mode, normalize, params):
         )
 
         train_spec = tf.estimator.TrainSpec(
-            lambda: est.input_fn(data_dir, normalize, params),
+            lambda: est.input_fn(data_dir, params),
             max_steps = params.max_steps,
         )
         
         test_spec = tf.estimator.EvalSpec(
-            lambda: est.input_fn(data_dir, normalize, params),
+            lambda: est.input_fn(data_dir, params),
             steps = params.eval_steps,
             exporters = [exporter],
         )
@@ -79,14 +78,14 @@ def main(data_dir, job_dir, mode, normalize, params):
         # main & evaluate
         tf.logging.info("Start train...")
         estimator.train(
-            input_fn = lambda: est.input_fn(data_dir, normalize, params),
+            input_fn = lambda: est.input_fn(data_dir, params),
             max_steps = params.max_steps,
         )
 
     elif mode == Mode.evaluate:
         tf.logging.info("Start evaluate...")
         estimator.evaluate(
-            input_fn = lambda: est.input_fn(data_dir, normalize, params),
+            input_fn = lambda: est.input_fn(data_dir, params),
             steps = params.eval_steps,
         )
     
