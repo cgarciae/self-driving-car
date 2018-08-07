@@ -17,7 +17,13 @@ RUN pip install flask
 RUN pip install ipywidgets
 RUN pip install imgaug
 RUN pip install dask
+RUN pip install opencv-python
 RUN pip install -U dataget
+
+RUN apt-get install -y \
+    libsm6 \
+    libxext6 \
+    libxrender-dev
 
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
