@@ -194,8 +194,11 @@ def get_weights(steering, params):
     ones = tf.ones_like(steering)
     zeros_weight = params.zeros_weight * ones
 
-    weights = tf.abs(tf.clip_by_value(steering, -1.0, 1.0))
-    weights = 1.0 + (params.max_weight - 1.0 ) * weights
+    weights = tf.where(
+        tf.abs(steering) < 0.5,
+        ones,
+        ones * params.max_weight,
+    )
 
     return tf.where(
         tf.equal(steering, 0.0),
@@ -290,16 +293,6 @@ def process_dataframe(df, params):
     df = pd.concat([df, df_flipped])
 
     df["original_steering"] = df.steering
-
-    
-
-    
-
-    if params.same_direction_camera:
-        wrong_cam0 = (df.camera == 0) & (df.original_steering + params.same_direction_camera < 0)
-        wrong_cam2 = (df.camera == 2) & (df.original_steering - params.same_direction_camera > 0)
-
-        df = df[(~wrong_cam0) & (~wrong_cam2)]
 
     cam0 = df.camera == 0
     cam2 = df.camera == 2

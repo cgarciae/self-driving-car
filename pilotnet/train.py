@@ -13,7 +13,7 @@ from . import estimator as est
 from datetime import datetime
 
 
-PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "params.yml")
+PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "train.yml")
 PROJECT = "pilotnet"
 
 class Mode:

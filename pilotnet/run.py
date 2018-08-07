@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-TRAINING_PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "params.yml")
+TRAINING_PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "train.yml")
 RUN_PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "run.yml")
 
 
