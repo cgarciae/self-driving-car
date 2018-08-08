@@ -326,8 +326,12 @@ def process_data(row, params):
         lambda: image,
     )
 
-    noise = tf.random_normal([], mean = 0.0, stddev = params.angle_noise_std)
-    row["steering"] = tf.cast(row["steering"], tf.float32) + noise
+    if params.angle_noise_std > 0:
+        noise = tf.random_normal([], mean = 0.0, stddev = params.angle_noise_std)
+        row["steering"] = tf.cast(row["steering"], tf.float32) + noise
+    else:
+        row["steering"] = tf.cast(row["steering"], tf.float32)
+
 
     image = (image / 255.0) * 2.0 - 1.0
 

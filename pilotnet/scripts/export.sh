@@ -1,10 +1,10 @@
 
-declare -r JOB_ID="pilotnet_$(date +%Y%m%d%H%M%S)"
+JOB_ID="pilotnet_$(date +%Y%m%d%H%M%S)"
 
 # training variables
-declare -r MODEL_DIR="models/pilotnet_20180802041904"
-declare -r DATA_DIR="data/raw"
-declare -r MODE="export"
+MODEL_DIR="models/pilotnet_20180802041904"
+DATA_DIR="data/raw"
+MODE="export"
 
 python -m pilotnet.main \
     --job-dir $MODEL_DIR \

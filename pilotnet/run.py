@@ -29,18 +29,25 @@ class SimplePIController:
         self.set_point = 0.
         self.error = 0.
         self.integral = 0.
+        self.throttle = 0.
 
     def set_desired(self, desired):
         self.set_point = desired
 
-    def update(self, measurement):
+    def update(self, measurement, target = None):
+        if target is None:
+            target = self.set_point
+
         # proportional error
-        self.error = self.set_point - measurement
+        self.error = target - measurement
 
         # integral error
         self.integral += self.error
+        # self.integral *= 0.99
 
-        return self.Kp * self.error + self.Ki * self.integral
+        self.throttle = self.Kp * self.error + self.Ki * self.integral
+
+        return max(self.throttle, -0.01)
 
 
 
@@ -95,9 +102,18 @@ class Car:
             elif self.params.policy == "mode":
                 i = np.argmax(probabilities)
                 steering_angle = self.angles[i]
+            elif self.params.policy == "mean_mode":
+                mean = np.dot(probabilities.T, self.angles)
+                i = np.argmax(probabilities)
+                mode = self.angles[i]
+                steering_angle = (mean + mode) / 2.0
 
-            # throttle = self.controller.update(float(speed))
-            throttle = self.controller.set_point
+            # target_speed = self.controller.set_point * (1.0 - ((abs(steering_angle)) / 4.0))
+            # throttle = self.controller.update(float(speed), target=target_speed)
+            throttle = self.controller.update(float(speed))
+            
+            
+            # throttle = self.controller.set_point
 
             # print(steering_angle, throttle)
             self.send_control(steering_angle, throttle)
@@ -187,7 +203,7 @@ def main(export_dir, train, params):
     app = Flask(__name__)
 
 
-    controller = SimplePIController(params.kp, params.kp)
+    controller = SimplePIController(params.kp, params.ki)
     controller.set_desired(params.speed)
 
     model = ti.estimator.SavedModelPredictor(export_dir)

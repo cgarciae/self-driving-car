@@ -1,7 +1,7 @@
 
 
-declare -r RAW_DIR="data/raw"
-declare -r AUGMENTED_DIR="data/augmented"
+RAW_DIR="data/raw"
+AUGMENTED_DIR="data/augmented"
 
 
 python -m pilotnet.data_augmentation \
