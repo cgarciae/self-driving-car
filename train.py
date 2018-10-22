@@ -6,32 +6,79 @@ os.environ["LC_ALL"] = "C.UTF-8"
 os.environ["LANG"] = "C.UTF-8"
 
 import tensorflow as tf
-import click
+import fire
 import logging
 import dicto as do
-from . import estimator as est
+import estimator as est
 from datetime import datetime
 
 
-PARAMS_PATH = os.path.join(os.path.dirname(__file__), "config", "train.yml")
-PROJECT = "pilotnet"
 
 class Mode:
     train_and_evaluate = "train_and_evaluate"
     train = "train"
     evaluate = "evaluate"
     export = "export"
+    
 
+PARAMS = dict(
+    network = "pilot",
+    project = "pilotnet",
 
-@click.command()
-@click.option('--data-dir', required = True)
-@click.option('--job-dir', required = True)
-@click.option('--mode', default = "train_and_evaluate", type=click.Choice([Mode.train_and_evaluate, Mode.train, Mode.evaluate, Mode.export]))
-@do.click_options_config(PARAMS_PATH, "params", underscore_to_dash = False)
+    # bins
+    nbins = 51,
+
+    # dataset
+    angle_correction = 0.05,
+    only_center_camera = False,
+
+    # regularization
+    label_smoothing = 0.0,
+    zeros_weight = 0.3,
+    max_weight = 5.0,
+    angle_noise_std = 0.0,
+    l1_embeddings_regularization = 0.0,
+    l2_regularization = 0.0,
+    dropout = 0.15,
+
+    # train
+    summary_steps = 200,
+    max_steps = 200000,
+    save_checkpoints_steps = 5000,
+    eval_steps = 20,
+    start_delay_secs = 60,
+    throttle_secs = 120,
+
+    # pipeline
+    batch_size = 64,
+    buffer_size = 1000,
+    n_threads = 4,
+
+    # image
+    image_height = 160,
+    image_width = 320,
+    crop_up = 50,
+    crop_down = 25,
+    resize_height = 66,
+    resize_width = 200,
+
+    # learning rate
+    cold_learning_rate =  0.000001,
+    learning_rate = 0.01,
+    final_learning_rate = 0.0001,
+
+    cold_steps = 0,
+    warmup_steps = 0,
+)
+
+PARAMS["decay_steps"] = PARAMS["max_steps"]
+
+@do.fire_options(PARAMS, "params")
 def main(data_dir, job_dir, mode, params):
+
+    print("JOB_DIR:", job_dir)
     
     tf.logging.set_verbosity(tf.logging.INFO)
-
 
     run_config = tf.estimator.RunConfig(
         model_dir = job_dir,
@@ -52,7 +99,7 @@ def main(data_dir, job_dir, mode, params):
         compress_code(job_dir)
 
         exporter = tf.estimator.LatestExporter(
-            PROJECT,
+            params.project,
             lambda: est.serving_input_fn(params)
         )
 
@@ -98,7 +145,7 @@ def main(data_dir, job_dir, mode, params):
     # export
     tf.logging.info("Exporting Saved Model: ")
     estimator.export_savedmodel(
-        os.path.join(job_dir, "export", PROJECT),
+        os.path.join(job_dir, "export", params.project),
         lambda: est.serving_input_fn(params)
     )
 
@@ -115,4 +162,4 @@ def compress_code(job_dir):
 
 
 if __name__ == '__main__':
-    main()
+    fire.Fire(main)

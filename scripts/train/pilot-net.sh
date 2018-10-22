@@ -7,9 +7,12 @@ MODEL_DIR="models/$JOB_ID"
 DATA_DIR="data/raw"
 MODE="train"
 
+# train params
+
+
 echo MODEL_DIR: $MODEL_DIR
 
-python -m pilotnet.train \
+python train.py \
     --job-dir $MODEL_DIR \
     --data-dir $DATA_DIR \
     --mode $MODE

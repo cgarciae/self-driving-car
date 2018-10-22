@@ -2,7 +2,7 @@ import dataget as dg
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-from .model import pilot_net, cris_net
+from model import pilot_net, cris_net, pilot_relation_net
 from tensorflow.contrib import autograph
 import tensorflow.contrib.slim as slim
 
@@ -88,6 +88,8 @@ def model_fn(features, labels, mode, params):
         network = pilot_net
     elif params.network == "cris":
         network = cris_net
+    elif params.network == "relation":
+        network = pilot_relation_net
     else:
         raise ValueError(params.network)
 

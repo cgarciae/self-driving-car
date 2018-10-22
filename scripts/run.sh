@@ -3,5 +3,4 @@ EXPORT_DIR="models/pilotnet_20180808055900/export/pilotnet/1533711551" #=> BEST 
 
 
 python -m pilotnet.run \
-    --export-dir $EXPORT_DIR \
-    $@
+    --export-dir $EXPORT_DIR
