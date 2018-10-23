@@ -3,6 +3,6 @@ kp: 0.1
 ki: 0.002
 speed: 0.3
 
-plot: True
+plot: False
 
-policy: mode
+policy: mean

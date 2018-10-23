@@ -12,7 +12,7 @@ MODE="train"
 
 echo MODEL_DIR: $MODEL_DIR
 
-python train.py \
+python -m pilotnet.train \
     --job-dir $MODEL_DIR \
     --data-dir $DATA_DIR \
     --mode $MODE

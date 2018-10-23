@@ -9,7 +9,7 @@ import tensorflow as tf
 import fire
 import logging
 import dicto as do
-import estimator as est
+from . import estimator as est
 from datetime import datetime
 
 

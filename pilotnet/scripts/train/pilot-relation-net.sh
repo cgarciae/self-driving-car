@@ -13,9 +13,10 @@ NETWORK="relation"
 
 echo MODEL_DIR: $MODEL_DIR
 
-python train.py \
+python -m pilotnet.train \
     --data-dir $DATA_DIR \
     --job-dir $MODEL_DIR \
-    --mode $MODE
+    --mode $MODE \
+    --network $NETWORK
 
 echo MODEL_DIR: $MODEL_DIR

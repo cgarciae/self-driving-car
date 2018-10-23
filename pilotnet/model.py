@@ -88,7 +88,7 @@ def pilot_relation_net(images, mode, params, conv_args = {}):
     net = ti.layers.add_coordinates(net)
 
     n_objetcs = np.prod(net.shape[1:-1])
-    n_channels = net.shape[1]
+    n_channels = net.shape[-1]
     
     net = tf.reshape(net, [-1, n_channels])
 

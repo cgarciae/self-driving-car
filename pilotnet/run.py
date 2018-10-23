@@ -111,6 +111,7 @@ class Car:
             # target_speed = self.controller.set_point * (1.0 - ((abs(steering_angle)) / 4.0))
             # throttle = self.controller.update(float(speed), target=target_speed)
             throttle = self.controller.update(float(speed))
+            throttle = 0.3
             
             
             # throttle = self.controller.set_point
